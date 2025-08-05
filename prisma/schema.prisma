@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Campus {
+  id          String      @id @default(cuid())
+  name        String
+  challenges  Challenge[]
+  standings   Standing[]
+}
+
+model User {
+  id              String        @id @default(cuid())
+  name            String
+  email           String        @unique
+  campusId        String
+  campus          Campus        @relation(fields: [campusId], references: [id])
+  submissions     Submission[]
+  standings       Standing?
+  profilePicUrl   String?
+  
+  @@index([campusId])
+}
+
+model Challenge {
+  id            String      @id @default(cuid())
+  campusId      String
+  campus        Campus      @relation(fields: [campusId], references: [id])
+  title         String
+  description   String
+  hint          String?
+  scheduledAt   DateTime
+  expiresAt     DateTime
+  isBonus       Boolean     @default(false)
+  sponsorId     String?
+  sponsor       Sponsor?    @relation(fields: [sponsorId], references: [id])
+  submissions   Submission[]
+
+  @@index([campusId])
+  @@index([sponsorId])
+}
+
+model Submission {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  challengeId     String
+  challenge       Challenge   @relation(fields: [challengeId], references: [id])
+  submittedAt     DateTime    @default(now())
+  mediaUrl        String
+  verified        Boolean     @default(false)
+  pointsAwarded   Int?
+
+  @@index([challengeId, submittedAt(sort: Desc)])
+  @@index([userId])
+}
+
+model Standing {
+  id            String  @id @default(cuid())
+  campusId      String
+  campus        Campus  @relation(fields: [campusId], references: [id])
+  userId        String  @unique
+  user          User    @relation(fields: [userId], references: [id])
+  dailyPoints   Int     @default(0)
+  weeklyPoints  Int     @default(0)
+  streakCount   Int     @default(0)
+
+  @@index([campusId, weeklyPoints(sort: Desc)])
+  @@index([campusId, dailyPoints(sort: Desc)])
+}
+
+model Sponsor {
+  id          String      @id @default(cuid())
+  name        String
+  challenges  Challenge[]
+}
