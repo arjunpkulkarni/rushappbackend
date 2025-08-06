@@ -5,24 +5,8 @@ const router = Router();
 
 // GET /api/v1/challenges?campus=UUID
 router.get('/', async (req, res) => {
-    const { campus } = req.query;
-
-    if (!campus) {
-        return res.status(400).json({ error: 'Campus ID is required' });
-    }
-
     try {
-        const challenges = await prisma.challenge.findMany({
-            where: {
-                campusId: campus as string,
-                scheduledAt: {
-                    lte: new Date(),
-                },
-                expiresAt: {
-                    gte: new Date(),
-                },
-            },
-        });
+        const challenges = await prisma.challenge.findMany();
         res.json(challenges);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch challenges' });
@@ -31,23 +15,10 @@ router.get('/', async (req, res) => {
 
 // GET /api/v1/challenges/featured?campus=UUID
 router.get('/featured', async (req, res) => {
-    const { campus } = req.query;
-
-    if (!campus) {
-        return res.status(400).json({ error: 'Campus ID is required' });
-    }
-
     try {
         const featuredChallenge = await prisma.challenge.findFirst({
             where: {
-                campusId: campus as string,
                 isBonus: true,
-                scheduledAt: {
-                    lte: new Date(),
-                },
-                expiresAt: {
-                    gte: new Date(),
-                },
             },
         });
         res.json(featuredChallenge);
@@ -56,9 +27,36 @@ router.get('/featured', async (req, res) => {
     }
 });
 
-// POST /api/v1/challenges/{challenge_id}/submit
-router.post('/:challengeId/submit', (req, res) => {
-    res.json({ message: 'TODO: Submit proof for a challenge' });
+// POST /api/v1/challenges
+router.post('/', async (req, res) => {
+    const {
+        campusId,
+        title,
+        description,
+        hint,
+        mediaUrl,
+        scheduledAt,
+        expiresAt,
+        isBonus,
+    } = req.body;
+
+    try {
+        const newChallenge = await prisma.challenge.create({
+            data: {
+                campusId,
+                title,
+                description,
+                hint,
+                mediaUrl,
+                scheduledAt: new Date(scheduledAt),
+                expiresAt: new Date(expiresAt),
+                isBonus,
+            },
+        });
+        res.status(201).json(newChallenge);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create challenge' });
+    }
 });
 
 export default router;

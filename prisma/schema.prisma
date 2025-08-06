@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = "prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza195eW5lQV9GdjhndDlaeUVuSDEydjMiLCJhcGlfa2V5IjoiMDFLMjBKRFZKWFdGVlkwQTFROFRLUFhKUkQiLCJ0ZW5hbnRfaWQiOiI3NDYzZGY5YzM1YWQ5Y2YzZDJmYmM4OWNhN2NhMjQyODI0ZDkwZjRhMjgxN2U4Y2JmY2VlNzEwNjViYzQ1YzI3IiwiaW50ZXJuYWxfc2VjcmV0IjoiY2FhNDI2ZmEtZmQ5OS00OGVkLTlkMTctYjcyNDZmNmQ4YThjIn0.kfEzY6kK94TXoYX9kX4sRITXS72k2sFZqnJ0C2Jz1Qw"
 }
 
 model Campus {
@@ -18,9 +18,11 @@ model Campus {
 
 model User {
   id            String      @id @default(cuid())
-  email         String      @unique
+  email         String?
   name          String
-  passwordHash  String
+  username      String      @unique
+  phoneNumber   String?
+  passwordHash  String?
   campusId      String
   campus        Campus      @relation(fields: [campusId], references: [id])
   submissions   Submission[]
