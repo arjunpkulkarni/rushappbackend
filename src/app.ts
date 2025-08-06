@@ -4,7 +4,7 @@ import morgan from "morgan";
 import cors from "cors";
 import helmet from "helmet";
 import { PrismaClient } from "@prisma/client";
-import routes from "../src/routes";
+import routes from "./routes";
 
 export const prisma = new PrismaClient();
 

@@ -1,13 +1,13 @@
 import { Router } from "express";
-import auth from "../middleware/requireAuth";
 import challenge from "./challenges";
 import submission from "./submissions";
 import leaderboard from "./leaderboard";
+import users from "./users";
 
 const router = Router();
-router.use("/auth", auth);
 router.use("/challenges", challenge);
 router.use("/submissions", submission);
 router.use("/leaderboard", leaderboard);
+router.use("/users", users);
 
 export default router;
