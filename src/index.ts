@@ -27,7 +27,7 @@ import userRoutes from './routes/users';
 
 app.use('/api/v1/challenges', challengeRoutes);
 app.use('/api/v1/leaderboard', leaderboardRoutes);
-app.use('/api/v1/campus', submissionRoutes); // e.g. /api/v1/campus/uiuc/feed
+app.use('/api/v1/campus', submissionRoutes); 
 app.use('/api/v1/users', userRoutes);
 
 

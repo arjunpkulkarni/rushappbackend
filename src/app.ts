@@ -1,0 +1,21 @@
+import "dotenv/config";
+import express from "express";
+import morgan from "morgan";
+import cors from "cors";
+import helmet from "helmet";
+import { PrismaClient } from "@prisma/client";
+import routes from "../src/routes";
+
+export const prisma = new PrismaClient();
+
+const app = express();
+app.use(helmet());
+app.use(cors());
+app.use(express.json({ limit: "10mb" }));
+app.use(morgan("dev"));
+
+app.use("/api", routes);
+
+app.get("/health", (_, res) => res.json({ status: "ok" }));
+
+export default app;
