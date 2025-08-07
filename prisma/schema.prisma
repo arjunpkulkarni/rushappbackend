@@ -28,6 +28,10 @@ model User {
   submissions   Submission[]
   streak        Int         @default(0)
   createdAt     DateTime    @default(now())
+  bio           String?
+  profileImage  String?
+  friends       User[]      @relation("UserFriends")
+  friendOf      User[]      @relation("UserFriends")
 }
 
 model Challenge {

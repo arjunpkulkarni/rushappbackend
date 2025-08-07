@@ -1,21 +1,31 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import { AuthRequest, protect } from '../middleware/auth';
 
 const prisma = new PrismaClient();
 const router = Router();
 
-router.post('/', async (req, res) => {
-  const { name, username, phoneNumber, campusId } = req.body;
+router.get('/me', protect, async (req: AuthRequest, res) => {
+  res.json(req.user);
+});
 
-  if (!name || !username || !campusId) {
+router.post('/', async (req, res) => {
+  const { name, username, password, phoneNumber, campusId } = req.body;
+
+  if (!name || !username || !password || !campusId) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
   try {
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
     const user = await prisma.user.create({
       data: {
         name,
         username,
+        passwordHash,
         phoneNumber,
         campusId,
       },
