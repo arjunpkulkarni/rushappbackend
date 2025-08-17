@@ -4,6 +4,7 @@ import submission from "./submissions";
 import leaderboard from "./leaderboard";
 import users from "./users";
 import campus from "./campus";
+import auth from "./auth";
 
 const router = Router();
 router.use("/challenges", challenge);
@@ -11,5 +12,6 @@ router.use("/submissions", submission);
 router.use("/leaderboard", leaderboard);
 router.use("/users", users);
 router.use("/campus", campus);
+router.use("/auth", auth);
 
 export default router;

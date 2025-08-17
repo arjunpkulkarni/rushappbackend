@@ -13,13 +13,16 @@ router.get('/me', protect, async (req: AuthRequest, res) => {
 router.post('/', async (req, res) => {
   const { name, username, password, phoneNumber, campusId } = req.body;
 
-  if (!name || !username || !password || !campusId) {
+  if (!name || !username || !campusId) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
   try {
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
+    let passwordHash: string | undefined = undefined;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      passwordHash = await bcrypt.hash(password, salt);
+    }
 
     const user = await prisma.user.create({
       data: {
