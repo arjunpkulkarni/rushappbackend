@@ -8,6 +8,22 @@ import twilio from 'twilio';
 const prisma = new PrismaClient();
 const router = Router();
 
+// Build a Twilio client using either Account SID/Auth Token or API Key/Secret
+const getTwilioClient = () => {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const apiKey = process.env.TWILIO_API_KEY;
+  const apiSecret = process.env.TWILIO_API_SECRET;
+
+  if (apiKey && apiSecret && accountSid) {
+    return twilio(apiKey, apiSecret, { accountSid });
+  }
+  if (accountSid && authToken) {
+    return twilio(accountSid, authToken);
+  }
+  throw new Error('Missing Twilio credentials. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN or TWILIO_API_KEY, TWILIO_API_SECRET, and TWILIO_ACCOUNT_SID');
+};
+
 // Normalize phone numbers to E.164. Default to US if 10 digits without country code
 const normalizePhoneToE164 = (raw: string): string => {
   if (!raw) return raw;
@@ -79,10 +95,11 @@ router.post('/otp/start', async (req, res) => {
   }
 
   try {
-    const accountSid = process.env.TWILIO_ACCOUNT_SID || 'ACca47ece721a32c752679a081ceebd906';
-    const authToken = process.env.TWILIO_AUTH_TOKEN || 'a53f76342c8ad0cebfd1db9de38ab6da';
-    const verifySid = process.env.TWILIO_VERIFY_SID || 'VA40918d13590e9290f6208415cdb20f9b';
-    const client = twilio(accountSid, authToken);
+    const verifySid = process.env.TWILIO_VERIFY_SID;
+    if (!verifySid) {
+      return res.status(500).json({ error: 'Missing TWILIO_VERIFY_SID' });
+    }
+    const client = getTwilioClient();
 
     const to = normalizePhoneToE164(result.data.phoneNumber);
     const verification = await client.verify.v2
@@ -90,7 +107,11 @@ router.post('/otp/start', async (req, res) => {
       .verifications.create({ to, channel: 'sms' });
 
     res.json({ sid: verification.sid, status: verification.status, to });
-  } catch (error) {
+  } catch (error: any) {
+    const code = error?.code;
+    if (code === 20003) {
+      return res.status(401).json({ error: 'Twilio authentication failed. Check credentials.' });
+    }
     console.error('OTP start error:', error);
     res.status(500).json({ error: 'Could not start verification' });
   }
@@ -107,10 +128,11 @@ router.post('/otp/verify', async (req, res) => {
     return res.status(400).json({ error: 'Invalid data', details: result.error.errors });
   }
   try {
-    const accountSid = process.env.TWILIO_ACCOUNT_SID || 'ACca47ece721a32c752679a081ceebd906';
-    const authToken = process.env.TWILIO_AUTH_TOKEN || 'a53f76342c8ad0cebfd1db9de38ab6da';
-    const verifySid = process.env.TWILIO_VERIFY_SID || 'VA40918d13590e9290f6208415cdb20f9b';
-    const client = twilio(accountSid, authToken);
+    const verifySid = process.env.TWILIO_VERIFY_SID;
+    if (!verifySid) {
+      return res.status(500).json({ error: 'Missing TWILIO_VERIFY_SID' });
+    }
+    const client = getTwilioClient();
 
     const to = normalizePhoneToE164(result.data.phoneNumber);
     const check = await client.verify.v2
@@ -124,12 +146,16 @@ router.post('/otp/verify', async (req, res) => {
     // Find or create user by phone (no password)
     let user = await prisma.user.findFirst({ where: { phoneNumber: to } });
     if (!user) {
+      let campus = await prisma.campus.findFirst();
+      if (!campus) {
+        campus = await prisma.campus.create({ data: { name: 'Default Campus' } });
+      }
       user = await prisma.user.create({
         data: {
           name: 'New User',
           username: `user_${Date.now()}`,
           phoneNumber: to,
-          campusId: 'uiuc123',
+          campusId: campus.id,
         },
       });
     }
@@ -139,7 +165,11 @@ router.post('/otp/verify', async (req, res) => {
       token,
       user: { id: user.id, name: user.name, username: user.username, campusId: user.campusId },
     });
-  } catch (error) {
+  } catch (error: any) {
+    const code = error?.code;
+    if (code === 20003) {
+      return res.status(401).json({ error: 'Twilio authentication failed. Check credentials.' });
+    }
     console.error('OTP verify error:', error);
     res.status(500).json({ error: 'Could not verify code' });
   }

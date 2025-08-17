@@ -27,6 +27,7 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
           name: true,
           email: true,
           username: true,
+          profileImage: true,
           campus: true,
         },
       });
