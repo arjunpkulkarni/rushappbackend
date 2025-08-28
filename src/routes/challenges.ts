@@ -27,6 +27,17 @@ router.get('/featured', async (req, res) => {
     }
 });
 
+// GET /api/v1/challenges/:id/stats - live stats for a challenge
+router.get('/:id/stats', async (req, res) => {
+    try {
+        const { id } = req.params as { id: string };
+        const total = await prisma.submission.count({ where: { challengeId: id, verified: true } });
+        res.json({ verifiedCount: total });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch challenge stats' });
+    }
+});
+
 // POST /api/v1/challenges
 router.post('/', async (req, res) => {
     const {

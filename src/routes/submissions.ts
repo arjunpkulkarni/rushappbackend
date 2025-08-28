@@ -94,6 +94,19 @@ router.post('/', protect, upload.single('video'), async (req: AuthRequest, res) 
       return res.status(400).json({ error: 'You have already submitted for this challenge' });
     }
 
+    // Enforce buy-in: must have buy-in for the day BEFORE the challenge date to play tomorrow's challenge
+    // Determine challenge day in UTC
+    const startOfUtcDay = (d: Date) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+    const challengeDayUtc = startOfUtcDay(new Date());
+    const yesterdayUtc = new Date(challengeDayUtc.getTime() - 24 * 60 * 60 * 1000);
+
+    const hadBuyIn = await (prisma as any).buyIn.findUnique({
+      where: { userId_campusId_date: { userId, campusId, date: yesterdayUtc } }
+    });
+    if (!hadBuyIn) {
+      return res.status(403).json({ error: 'Buy-in required before midnight to participate' });
+    }
+
     // Create the submission
     const mediaUrl = `/uploads/submissions/${req.file.filename}`;
     
@@ -136,10 +149,34 @@ router.post('/', protect, upload.single('video'), async (req: AuthRequest, res) 
 });
 
 // GET /api/v1/submissions/feed/:campusId - Get submissions feed for a campus
-router.get('/feed/:campusId', (req, res) => {
-    const { campusId } = req.params;
-    const { limit, cursor } = req.query;
-    res.json({ message: `TODO: Fetch feed for campus ${campusId} with limit ${limit} and cursor ${cursor}` });
+router.get('/feed/:campusId', async (req, res) => {
+  try {
+    const { campusId } = req.params as { campusId: string };
+    const limit = Math.min(parseInt(String(req.query.limit || '20'), 10) || 20, 50);
+    const cursor = req.query.cursor ? String(req.query.cursor) : undefined;
+
+    const submissions = await prisma.submission.findMany({
+      where: { campusId },
+      orderBy: { createdAt: 'desc' },
+      take: limit + 1,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+      include: {
+        user: { select: { id: true, username: true, name: true, profileImage: true } },
+        challenge: { select: { id: true, title: true, description: true } },
+      },
+    });
+
+    let nextCursor: string | undefined = undefined;
+    if (submissions.length > limit) {
+      const nextItem = submissions.pop();
+      nextCursor = nextItem?.id;
+    }
+
+    res.json({ items: submissions, nextCursor });
+  } catch (e) {
+    console.error('Feed error', e);
+    res.status(500).json({ error: 'Failed to load feed' });
+  }
 });
 
 export default router;

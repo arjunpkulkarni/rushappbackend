@@ -77,3 +77,16 @@ model Leaderboard {
   entries   Json     // [{ userId, points }]
   updatedAt DateTime @updatedAt
 }
+
+model BuyIn {
+  id        String   @id @default(cuid())
+  userId    String
+  campusId  String
+  user      User     @relation(fields: [userId], references: [id])
+  campus    Campus   @relation(fields: [campusId], references: [id])
+  date      DateTime // start of the challenge day (00:00)
+  amount    Int      @default(1)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, campusId, date])
+}
