@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../app';
-import { authenticateToken } from '../middleware/auth';
+import { protect, AuthRequest } from '../middleware/auth';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -29,7 +29,7 @@ const upload = multer({
     if (file.mimetype.startsWith('video/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only video files are allowed!'), false);
+      cb(new Error('Only video files are allowed!'));
     }
   },
   limits: {
@@ -38,10 +38,15 @@ const upload = multer({
 });
 
 // POST /api/v1/submissions - Submit proof for a challenge
-router.post('/', authenticateToken, upload.single('videoUri'), async (req, res) => {
+router.post('/', protect, upload.single('videoUri'), async (req: AuthRequest, res) => {
   try {
     const { challengeId, campusId } = req.body;
-    const userId = req.user.id;
+    const userId = req.user?.id;
+
+    // Validate user authentication
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
 
     // Validate required fields
     if (!challengeId || !campusId) {
