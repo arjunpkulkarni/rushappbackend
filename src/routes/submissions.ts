@@ -39,17 +39,30 @@ router.post('/', protect, upload.single('video'), async (req: AuthRequest, res) 
     const { challengeId, campusId } = req.body;
     const userId = req.user?.id;
 
+    console.log('POST /api/v1/submissions', {
+      contentType: req.headers['content-type'],
+      body: { challengeId, campusId },
+      userId,
+      hasFile: !!req.file,
+      fileField: req.file?.fieldname,
+      fileMimetype: req.file?.mimetype,
+      fileSize: req.file?.size,
+    });
+
     // Validate user authentication
     if (!userId) {
+      console.log('Submissions: user not authenticated');
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
     // Validate required fields
     if (!challengeId || !campusId) {
+      console.log('Submissions: missing fields', { challengeId, campusId });
       return res.status(400).json({ error: 'challengeId and campusId are required' });
     }
 
     if (!req.file) {
+      console.log('Submissions: no file received', { contentType: req.headers['content-type'] });
       return res.status(400).json({ error: 'Video file is required' });
     }
 
@@ -59,10 +72,12 @@ router.post('/', protect, upload.single('video'), async (req: AuthRequest, res) 
     });
 
     if (!challenge) {
+      console.log('Submissions: challenge not found', { challengeId });
       return res.status(404).json({ error: 'Challenge not found' });
     }
 
     if (new Date() > challenge.expiresAt) {
+      console.log('Submissions: challenge expired', { expiresAt: challenge.expiresAt });
       return res.status(400).json({ error: 'Challenge has expired' });
     }
 
@@ -75,6 +90,7 @@ router.post('/', protect, upload.single('video'), async (req: AuthRequest, res) 
     });
 
     if (existingSubmission) {
+      console.log('Submissions: duplicate submission', { userId, challengeId });
       return res.status(400).json({ error: 'You have already submitted for this challenge' });
     }
 
@@ -107,6 +123,7 @@ router.post('/', protect, upload.single('video'), async (req: AuthRequest, res) 
       }
     });
 
+    console.log('Submissions: created', { submissionId: submission.id });
     res.status(201).json({
       message: 'Submission created successfully',
       submission
