@@ -38,7 +38,7 @@ const upload = multer({
 });
 
 // POST /api/v1/submissions - Submit proof for a challenge
-router.post('/', protect, upload.single('videoUri'), async (req: AuthRequest, res) => {
+router.post('/', protect, upload.single('video'), async (req: AuthRequest, res) => {
   try {
     const { challengeId, campusId } = req.body;
     const userId = req.user?.id;
