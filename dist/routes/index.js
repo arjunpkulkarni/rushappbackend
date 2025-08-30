@@ -1,0 +1,24 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const challenges_1 = __importDefault(require("./challenges"));
+const submissions_1 = __importDefault(require("./submissions"));
+const leaderboard_1 = __importDefault(require("./leaderboard"));
+const users_1 = __importDefault(require("./users"));
+const campus_1 = __importDefault(require("./campus"));
+const auth_1 = __importDefault(require("./auth"));
+const buyins_1 = __importDefault(require("./buyins"));
+const media_1 = __importDefault(require("./media"));
+const router = (0, express_1.Router)();
+router.use("/challenges", challenges_1.default);
+router.use("/submissions", submissions_1.default);
+router.use("/leaderboard", leaderboard_1.default);
+router.use("/users", users_1.default);
+router.use("/campus", campus_1.default);
+router.use("/auth", auth_1.default);
+router.use("/buyins", buyins_1.default);
+router.use("/media", media_1.default);
+exports.default = router;

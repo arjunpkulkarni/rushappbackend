@@ -5,11 +5,13 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon src/server.ts",
+    "prebuild": "prisma generate",
     "build": "tsc",
     "start": "node dist/server.js",
     "studio": "prisma studio",
     "migrate": "prisma migrate dev",
-    "generate": "prisma generate"
+    "generate": "prisma generate",
+    "postinstall": "prisma generate"
   },
   "keywords": [],
   "author": "",

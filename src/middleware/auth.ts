@@ -28,6 +28,7 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
           email: true,
           username: true,
           profileImage: true,
+          campusId: true,
           campus: true,
         },
       });

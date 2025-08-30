@@ -34,7 +34,7 @@ router.post('/', protect, async (req: AuthRequest, res) => {
       date = startOfUtcDay(tomorrow);
     }
 
-    const created = await (prisma as any).buyIn.upsert({
+    const created = await prisma.buyIn.upsert({
       where: { userId_campusId_date: { userId, campusId, date } },
       update: { amount: amount ?? 1 },
       create: { userId, campusId, date, amount: amount ?? 1 },
@@ -67,7 +67,7 @@ router.get('/status', protect, async (req: AuthRequest, res) => {
       date = startOfUtcDay(new Date());
     }
 
-    const found = await (prisma as any).buyIn.findUnique({ where: { userId_campusId_date: { userId, campusId, date } } });
+    const found = await prisma.buyIn.findUnique({ where: { userId_campusId_date: { userId, campusId, date } } });
     res.json({ hasBuyIn: !!found, buyIn: found || null });
   } catch (e) {
     console.error('Buy-in status error', e);

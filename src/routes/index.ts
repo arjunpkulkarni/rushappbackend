@@ -6,6 +6,7 @@ import users from "./users";
 import campus from "./campus";
 import auth from "./auth";
 import buyins from "./buyins";
+import media from "./media";
 
 const router = Router();
 router.use("/challenges", challenge);
@@ -15,5 +16,6 @@ router.use("/users", users);
 router.use("/campus", campus);
 router.use("/auth", auth);
 router.use("/buyins", buyins);
+router.use("/media", media);
 
 export default router;
